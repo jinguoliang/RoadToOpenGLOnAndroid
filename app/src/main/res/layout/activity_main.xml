@@ -11,7 +11,7 @@
     tools:context="com.jone.roadtoopenglonandroid.MainActivity">
 
     <android.opengl.GLSurfaceView
-        android:id="@+id/surfaceView"
+        android:id="@+id/surfaceView1"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </RelativeLayout>
