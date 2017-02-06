@@ -28,7 +28,8 @@ public class MRender implements GLSurfaceView.Renderer {
             + "}";
 
     private static final float[] VERTEX = {
-            0, 0f, 0.0f
+            0, 0f, 0.0f,
+            0.5f, 0f, 0f,
     };
     private FloatBuffer mVertexBuffer;
     private int mProgram;
@@ -89,13 +90,25 @@ public class MRender implements GLSurfaceView.Renderer {
         GLES20.glUseProgram(mProgram); // 使用程序，  还记的状态机吗？在调用这一句后，OpenGL相关的绘制操作就会基于这个Program
 
         GLES20.glEnableVertexAttribArray(mPositionHandle); // 刚才的顶点位置属性，先使能
-        GLES20.glVertexAttribPointer(mPositionHandle, VERTEX.length, GLES20.GL_FLOAT, false,
-                VERTEX.length * 4 , mVertexBuffer);  // 然后向这个属性设置数据，个参数什么意思呢？
+        GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false,
+                3 * 4 , mVertexBuffer);  // 然后向这个属性设置数据，各参数什么意思呢？
+        checkGLError("glVertexAttribPointer");
 
-        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1); // 这里是真正绘制的方法，GLES20.GL_POINTS表示绘制方式为绘制离散的点，而还有其他方式，比如最常用，绘制三角形，我们传三个顶点数据，就会绘制出一个三角形
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 2); // 这里是真正绘制的方法，GLES20.GL_POINTS表示绘制方式为绘制离散的点，而还有其他方式，比如最常用，绘制三角形，我们传三个顶点数据，就会绘制出一个三角形
+        checkGLError("glDrawArrays");
 
         GLES20.glDisableVertexAttribArray(mPositionHandle); // 使顶点属性不可用，这也是，状态机的操作
 
         GLES20.glUseProgram(0); // 还原程序，不在使用mProgram
+    }
+
+    static void checkGLError(String op)
+    {
+        final int error =GLES20.glGetError();
+        if (error != GLES20.GL_NO_ERROR) {
+            String msg = op + ": glError 0x" + Integer.toHexString(error);
+            Log.e(TAG, "CheckGLError: " + msg);
+            throw new RuntimeException(msg);
+        }
     }
 }
