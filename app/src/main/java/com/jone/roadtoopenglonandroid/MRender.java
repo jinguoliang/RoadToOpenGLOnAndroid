@@ -7,16 +7,17 @@ import android.util.Log;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by jinux on 17-1-24.
  */
 public class MRender implements GLSurfaceView.Renderer {
+    public static final String TAG = "MRender";
+
     private static final String VERTEX_SHADER = "attribute vec4 vPosition;\n"
             + "varying vec4 vColor;\n"
             + "void main() {\n"
@@ -34,10 +35,29 @@ public class MRender implements GLSurfaceView.Renderer {
             0, 0f, 0.0f,
             0.5f, 0f, 0f,
             0.5f, 0.5f, 0f,
+
+            -0.5f, 0.5f, 0.0f,
+            -0.5f, -0.5f, 0f,
     };
     private FloatBuffer mVertexBuffer;
     private int mProgram;
     private int mPositionHandle;
+
+    static int loadShader(int type, String shaderCode) {
+        int shader = GLES20.glCreateShader(type);   // 创建一个着色器对象
+        GLES20.glShaderSource(shader, shaderCode); // 设置着色器对象的源码， 是好像是C语言，但只是像而已，它叫ALSL
+        GLES20.glCompileShader(shader); // 编译，是的，既然设置的是源码，就需要编译了
+        return shader;
+    }
+
+    static void checkGLError(String op) {
+        final int error = GLES20.glGetError();
+        if (error != GLES20.GL_NO_ERROR) {
+            String msg = op + ": glError 0x" + Integer.toHexString(error);
+            Log.e(TAG, "CheckGLError: " + msg);
+            throw new RuntimeException(msg);
+        }
+    }
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -67,18 +87,15 @@ public class MRender implements GLSurfaceView.Renderer {
         GLES20.glAttachShader(mProgram, vertexShader); // 将着色器绑定到程序对象上
         GLES20.glAttachShader(mProgram, fragmentShader);
         GLES20.glLinkProgram(mProgram); // 连接，编译程序，为什么编译呢，你一会看到那个C语言大妈就知道了。
+        IntBuffer result = IntBuffer.allocate(1);
+        GLES20.glGetProgramiv(mProgram, GLES20.GL_LINK_STATUS, result);
+        Log.e(TAG, "loadProgram: " + result.get(0));
+        if (result.get(0) == 1) {
+            Log.e("glGetProgramInfoLog", GLES20.glGetProgramInfoLog(mProgram));
+        }
 
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition"); // 从着色器程序的到属性的位置，从而可以向该属性设置值
     }
-
-
-    static int loadShader(int type, String shaderCode) {
-        int shader = GLES20.glCreateShader(type);   // 创建一个着色器对象
-        GLES20.glShaderSource(shader, shaderCode); // 设置着色器对象的源码， 是好像是C语言，但只是像而已，它叫ALSL
-        GLES20.glCompileShader(shader); // 编译，是的，既然设置的是源码，就需要编译了
-        return shader;
-    }
-
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -95,23 +112,14 @@ public class MRender implements GLSurfaceView.Renderer {
 
         GLES20.glEnableVertexAttribArray(mPositionHandle); // 刚才的顶点位置属性，先使能
         GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false,
-                3 * 4 , mVertexBuffer);  // 然后向这个属性设置数据，各参数什么意思呢？
+                3 * 4, mVertexBuffer);  // 然后向这个属性设置数据，各参数什么意思呢？
         checkGLError("glVertexAttribPointer");
 
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 3); // 这里是真正绘制的方法，GLES20.GL_POINTS表示绘制方式为绘制离散的点，而还有其他方式，比如最常用，绘制三角形，我们传三个顶点数据，就会绘制出一个三角形
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 5); // 这里是真正绘制的方法，GLES20.GL_POINTS表示绘制方式为绘制离散的点，而还有其他方式，比如最常用，绘制三角形，我们传三个顶点数据，就会绘制出一个三角形
         checkGLError("glDrawArrays");
 
         GLES20.glDisableVertexAttribArray(mPositionHandle); // 使顶点属性不可用，这也是，状态机的操作
 
         GLES20.glUseProgram(0); // 还原程序，不在使用 mProgram
-    }
-
-    static void checkGLError(String op) {
-        final int error =GLES20.glGetError();
-        if (error != GLES20.GL_NO_ERROR) {
-            String msg = op + ": glError 0x" + Integer.toHexString(error);
-            Log.e(TAG, "CheckGLError: " + msg);
-            throw new RuntimeException(msg);
-        }
     }
 }
