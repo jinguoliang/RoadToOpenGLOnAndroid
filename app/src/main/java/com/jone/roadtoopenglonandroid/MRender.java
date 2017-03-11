@@ -28,7 +28,7 @@ public class MRender implements GLSurfaceView.Renderer {
     private static final String FRAGMENT_SHADER = "precision mediump float;\n"
             + "varying vec4 vColor;\n"
             + "void main() {\n"
-            + "  gl_FragColor = vColor;\n"
+            + "  gl_FragColor = vec4(1, 1, 1, 1);\n"
             + "}";
 
     private static final float[] VERTEX = {
@@ -115,7 +115,10 @@ public class MRender implements GLSurfaceView.Renderer {
                 3 * 4, mVertexBuffer);  // 然后向这个属性设置数据，各参数什么意思呢？
         checkGLError("glVertexAttribPointer");
 
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 5); // 这里是真正绘制的方法，GLES20.GL_POINTS表示绘制方式为绘制离散的点，而还有其他方式，比如最常用，绘制三角形，我们传三个顶点数据，就会绘制出一个三角形
+//        GLES20.glDrawArrays(GLES20.GL_LINES, 0, 5); // 离散的线，（1,2） （3,4） 多余的一个点就剩下了，没有用
+//        GLES20.glDrawArrays(GLES20.GL_LINE_STRIP, 0, 5); //（1,2）一条线 每增加一个点都会跟之前的一个点连成线
+//        GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, 0, 5); // （1,2）一条先 每增加一个点都会跟之前的一个点连成线，并且最后的一个点跟最开始的一个点之间连成一条线，从而形成一个闭环，见名知意呀
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 5); // 绘制离散的三角形，（1,2,3）一个三角形，多余的点同上边GL_LINES，舍弃
         checkGLError("glDrawArrays");
 
         GLES20.glDisableVertexAttribArray(mPositionHandle); // 使顶点属性不可用，这也是，状态机的操作
